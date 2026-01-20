@@ -38,7 +38,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # Pull latest Docker image
+            # lll latest Docker image
             docker pull ${{ secrets.DOCKER_USERNAME }}/cicd_app:latest
 
             # Stop & remove old container if exists
