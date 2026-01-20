@@ -1,66 +1,95 @@
 import streamlit as st
-import pickle
-import numpy as np
+from datetime import date
 
-# import the model
-pipe = pickle.load(open('pipe.pkl','rb'))
-df = pickle.load(open('df.pkl','rb'))
+# -------------------- PAGE CONFIG --------------------
+st.set_page_config(
+    page_title="Age Calculator",
+    page_icon="🎂",
+    layout="centered"
+)
 
-st.title("Laptop Predictor")
+# -------------------- CUSTOM CSS --------------------
+st.markdown("""
+<style>
+body {
+    background-color: #eef2f7;
+}
+.main {
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px;
+}
+h1 {
+    text-align: center;
+    color: #2c3e50;
+}
+.stButton>button {
+    background-color: #6c63ff;
+    color: white;
+    border-radius: 10px;
+    height: 3em;
+    width: 100%;
+    font-size: 18px;
+}
+.result {
+    background-color: #f0f4ff;
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 20px;
+    color: #2c3e50;
+    text-align: center;
+    margin-top: 20px;
+}
+.footer {
+    text-align: center;
+    color: gray;
+    margin-top: 30px;
+    font-size: 14px;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# brand
-company = st.selectbox('Brand',df['Company'].unique())
+# -------------------- TITLE --------------------
+st.markdown("<h1>🎂 Age Calculator</h1>", unsafe_allow_html=True)
+st.write("Select your **Date of Birth** and calculate your exact age.")
 
-# type of laptop
-type = st.selectbox('Type',df['TypeName'].unique())
+# -------------------- INPUT --------------------
+dob = st.date_input(
+    "📅 Select your Date of Birth",
+    min_value=date(1900, 1, 1),
+    max_value=date.today()
+)
 
-# Ram
-ram = st.selectbox('RAM(in GB)',[2,4,6,8,12,16,24,32,64])
+# -------------------- CALCULATION --------------------
+if st.button("Calculate Age 🎉"):
+    today = date.today()
 
-# weight
-weight = st.number_input('Weight of the Laptop')
+    years = today.year - dob.year
+    months = today.month - dob.month
+    days = today.day - dob.day
 
-# Touchscreen
-touchscreen = st.selectbox('Touchscreen',['No','Yes'])
+    if days < 0:
+        months -= 1
+        days += 30
 
-# IPS
-ips = st.selectbox('IPS',['No','Yes'])
+    if months < 0:
+        years -= 1
+        months += 12
 
-# screen size
-screen_size = st.slider('Scrensize in inches', 10.0, 18.0, 13.0)
+    st.markdown(
+        f"""
+        <div class="result">
+            🎈 You are <br><br>
+            <b>{years}</b> Years  
+            <b>{months}</b> Months  
+            <b>{days}</b> Days old
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-# resolution
-resolution = st.selectbox('Screen Resolution',['1920x1080','1366x768','1600x900','3840x2160','3200x1800','2880x1800','2560x1600','2560x1440','2304x1440'])
-
-#cpu
-cpu = st.selectbox('CPU',df['Cpu brand'].unique())
-
-hdd = st.selectbox('HDD(in GB)',[0,128,256,512,1024,2048])
-
-ssd = st.selectbox('SSD(in GB)',[0,8,128,256,512,1024])
-
-gpu = st.selectbox('GPU',df['Gpu brand'].unique())
-
-os = st.selectbox('OS',df['os'].unique())
-
-if st.button('Predict Price'):
-    # query
-    ppi = None
-    if touchscreen == 'Yes':
-        touchscreen = 1
-    else:
-        touchscreen = 0
-
-    if ips == 'Yes':
-        ips = 1
-    else:
-        ips = 0
-
-    X_res = int(resolution.split('x')[0])
-    Y_res = int(resolution.split('x')[1])
-    ppi = ((X_res**2) + (Y_res**2))**0.5/screen_size
-    query = np.array([company,type,ram,weight,touchscreen,ips,ppi,cpu,hdd,ssd,gpu,os])
-
-    query = query.reshape(1,12)
-    st.title("The predicted price of this configuration is " + str(int(np.exp(pipe.predict(query)[0]))))
-
+# -------------------- FOOTER --------------------
+st.markdown(
+    "<div class='footer'>Made with ❤️ using Streamlit</div>",
+    unsafe_allow_html=True
+)
