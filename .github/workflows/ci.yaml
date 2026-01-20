@@ -1,6 +1,7 @@
 name: Docker Build, Push & Deploy to EC2
 
-on : [push, pull_requests ]
+# Trigger workflow on push or pull request
+on: [push, pull_request]
 
 jobs:
   build-and-push:
@@ -21,16 +22,15 @@ jobs:
       # 3️⃣ Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t ${{secrets.DOCKER_USERNAME}}/cicd_app:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/cicd_app:latest .
 
       # 4️⃣ Push Docker image
       - name: Push Docker image
         run: |
-          docker push ${{secrets.DOCKER_USERNAME}}/cicd_app:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/cicd_app:latest
 
       # 5️⃣ Deploy to EC2 instance via SSH
       - name: Deploy to EC2 instance
-        if : sucess()
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -38,8 +38,12 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            docker pull ${{secrets.DOCKER_USERNAME}}/cicd_app:latest
+            # Pull latest Docker image
+            docker pull ${{ secrets.DOCKER_USERNAME }}/cicd_app:latest
+
+            # Stop & remove old container if exists
             docker stop cicd_app || true
             docker rm cicd_app || true
-            docker run -d --name cicd_app -p 80:8000
-             jibransaleem8/cicd_app:latest
+
+            # Run new container (image name on same line!)
+            docker run -d --name cicd_app -p 80:8000 ${{ secrets.DOCKER_USERNAME }}/cicd_app:latest
